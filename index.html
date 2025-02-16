@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediConnect</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.js"></script>
+    
+    <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        #splashScreen {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            background: rgb(251, 251, 253);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: bold;
+        }
+        #map {
+            height: 400px;
+            width: 100%;
+        }
+        #chat-box {
+            height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            background: hsl(227, 74%, 53%);
+        }
+    </style>
+</head>
+<body>
+    <body class="bg-gray-100 flex flex-col items-center justify-center min-h-screen p-4"></body>
+    <div id="splashScreen">MediConnect</div>
+    
+    <div id="loginPage" class="hidden flex items-center justify-center min-h-screen">
+        <div class="bg-white p-6 rounded-lg shadow-lg w-96">
+            <h2 class="text-xl font-bold text-center mb-4">Login</h2>
+            <input type="text" id="name" placeholder="Name" class="w-full p-2 border mb-2">
+            <input type="tel" id="phone" placeholder="Phone Number" class="w-full p-2 border mb-2">
+            <button onclick="login()" class="w-full bg-blue-500 text-white p-2 rounded">Login</button>
+            <button onclick="navigateTo('sosPage')" class="w-full bg-red-500 text-white p-2 rounded-md hover:bg-red-600 mt-2">SOS</button>
+    </div>
+
+
+        </div>
+    </div>
+
+    <div id="aiBotPage" class="hidden flex items-center justify-center min-h-screen">
+        <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md text-center">
+            <h2 class="text-xl font-bold mb-4">AI Chatbot 🤖</h2>
+            <div id="chat-box" class="mb-4 p-2"></div>
+            <div class="flex">
+                <input id="user-input" type="text" placeholder="Type your message..." 
+                    class="w-full p-2 border rounded-l focus:outline-none">
+                <button onclick="sendMessage()" class="bg-blue-500 text-white px-4 rounded-r">Send</button>
+            </div>
+            <button onclick="navigateTo('nextPage')" class="mt-4 bg-red-500 text-white px-4 py-2 rounded">Back</button>
+        </div>
+    </div>
+    <div id="nextPage" class="hidden flex items-center justify-center min-h-screen">
+        <div class="bg-white p-6 rounded-lg shadow-lg w-96 text-center">
+            <h2 class="text-xl font-bold mb-4">Choose an Option</h2>
+            <button onclick="navigateTo('aiBotPage')" class="w-full bg-yellow-500 text-white p-2 rounded mt-2">AI Bot</button>
+            <button onclick="navigateTo('videoPage')" class="w-full bg-blue-500 text-white p-2 rounded mt-2">Video</button>
+            <button onclick="navigateTo('homePage')" class="w-full bg-red-500 text-white p-2 rounded mt-2">Back</button>
+        </div>
+    </div>
+
+
+   
+
+    <div id="addPatientPage" class="hidden flex items-center justify-center min-h-screen">
+        <div class="bg-white p-6 rounded-lg shadow-lg w-96">
+            <h2 class="text-xl font-bold text-center mb-4">Add Patient</h2>
+            <input type="text" id="patientName" placeholder="Patient Name" class="w-full p-2 border mb-2">
+            <input type="number" id="patientAge" placeholder="Age" class="w-full p-2 border mb-2">
+            <input type="file" id="patientImage" class="w-full p-2 border mb-2" required>
+            <button onclick="savePatient()" class="w-full bg-blue-500 text-white p-2 rounded">Save</button>
+        </div>
+    </div>
+    <div id="homePage" class="hidden flex items-center justify-center min-h-screen">
+        <div class="bg-white p-6 rounded-lg shadow-lg w-96 text-center">
+            <h2 class="text-xl font-bold mb-4">Home</h2>
+            <button onclick="navigateTo('addPatientPage')" class="w-full bg-green-500 text-white p-2 rounded">Add Patient</button>
+            <button onclick="navigateTo('addEmergencyContactPage')" class="w-full bg-yellow-500 text-white p-2 rounded mt-2">Add Emergency Contact</button>
+            <button onclick="navigateTo('nextPage')" class="w-full bg-blue-500 text-white p-2 rounded mt-2">Next</button>
+            <div id="patientList" class="mt-4 text-left"></div>
+        </div>
+    </div>
+
+    <div id="nextPage" class="hidden flex items-center justify-center min-h-screen">
+        <div class="bg-white p-6 rounded-lg shadow-lg w-96 text-center">
+            <h2 class="text-xl font-bold mb-4">Choose an Option</h2>
+            <button onclick="navigateTo('videoPage')" class="w-full bg-green-500 text-white p-2 rounded mt-2">Live Video</button>
+            <button onclick="navigateTo('aiBotPage')" class="w-full bg-yellow-500 text-white p-2 rounded mt-2">AI Bot</button>
+            <button onclick="navigateTo('homePage')" class="w-full bg-red-500 text-white p-2 rounded mt-2">Back</button>
+        </div>
+    </div>
+
+    <div id="videoPage" class="hidden flex items-center justify-center min-h-screen">
+        <div class="bg-white p-6 rounded-lg shadow-lg w-96 text-center">
+            <h2 class="text-xl font-bold mb-4">Live Video</h2>
+            <video id="video" autoplay></video>
+            <button onclick="startVideo()" class="w-full bg-green-500 text-white p-2 rounded mt-2">Start Video</button>
+            <button onclick="navigateTo('nextPage')" class="w-full bg-red-500 text-white p-2 rounded mt-2">Back</button>
+        </div>
+    </div>
+
+    <div id="addEmergencyContactPage" class="hidden flex items-center justify-center min-h-screen">
+        <div class="bg-white p-6 rounded-lg shadow-lg w-96">
+            <h2 class="text-xl font-bold text-center mb-4">Add Emergency Contacts</h2>
+            <input type="text" id="contact1" placeholder="Emergency Contact Name 1" class="w-full p-2 border mb-2">
+            <input type="tel" id="phone1" placeholder="Phone Number 1" class="w-full p-2 border mb-2">
+            <input type="text" id="contact2" placeholder="Emergency Contact Name 2" class="w-full p-2 border mb-2">
+            <input type="tel" id="phone2" placeholder="Phone Number 2" class="w-full p-2 border mb-2">
+            <button onclick="saveEmergencyContacts()" class="w-full bg-blue-500 text-white p-2 rounded">Save</button>
+        </div>
+    </div>
+    <div class="bg-white p-6 rounded-lg shadow-lg w-96 text-center">
+        <h2 class="text-xl font-bold mb-4">🚑 SOS - Ambulance Tracking</h2>
+        <button onclick="sendSOS()" class="bg-red-500 text-white px-4 py-2 rounded mb-4 hover:bg-red-600">Send SOS</button>
+        <div id="map" class="border rounded-md"></div>
+        <p class="mt-2">Estimated Arrival: <span id="arrivalTime">15 MIN</span></p>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.js"></script>
+
+
+    <script>
+        let map,ambulanceMarker;
+        let patients = [];
+        let emergencyContacts = [];
+
+        setTimeout(() => {
+            document.getElementById("splashScreen").style.display = "none";
+            document.getElementById("loginPage").classList.remove("hidden");
+        }, 2000);
+        
+       
+
+        function startVideo() {
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(stream => {
+                    document.getElementById("video").srcObject = stream;
+                })
+                .catch(error => {
+                    console.error("Error accessing webcam:", error);
+                });}
+        
+
+
+        function login() {
+            const name = document.getElementById("name").value;
+            const phone = document.getElementById("phone").value;
+            if (name && phone) {
+                alert("Login Successful!");
+                navigateTo("homePage");
+            } else {
+                alert("Please enter your Name and Phone Number.");
+            }
+        }
+
+       
+        
+
+        function navigateTo(page) {
+            document.querySelectorAll("div[id$='Page']").forEach(div => div.classList.add("hidden"));
+            document.getElementById(page).classList.remove("hidden");
+        }
+
+        function savePatient() {
+            const name = document.getElementById("patientName").value;
+            const age = document.getElementById("patientAge").value;
+            const image = document.getElementById("patientImage").files[0];
+            if (name && age && image) {
+                patients.push({ name, age, image });
+                alert("Patient Added Successfully");
+                displayPatients();
+                navigateTo("homePage");
+            } else {
+                alert("Please enter all patient details including an image.");
+            }
+        }
+        function navigateTo(page) {
+            document.querySelectorAll("div[id$='Page']").forEach(div => div.classList.add("hidden"));
+            document.getElementById(page).classList.remove("hidden");
+        }
+        function displayPatients() {
+            document.getElementById("patientList").innerHTML = patients.map(p => 
+                `<button class='w-full bg-gray-200 p-2 rounded mt-2' onclick='showPatientDetails("${p.name}", "${p.age}")'>${p.name}</button>`
+            ).join("");
+        }
+
+        function showPatientDetails(name, age) {
+            alert(`Patient Name: ${name}\nAge: ${age}`);
+        }
+
+        function saveEmergencyContacts() {
+            emergencyContacts = [
+                { name: document.getElementById("contact1").value, phone: document.getElementById("phone1").value },
+                { name: document.getElementById("contact2").value, phone: document.getElementById("phone2").value }
+            ];
+            alert("Emergency Contacts Added Successfully");
+            navigateTo("homePage");
+
+       
+
+        function navigateTo(page) {
+    document.querySelectorAll("div[id$='Page']").forEach(div => div.classList.add("hidden"));
+    document.getElementById(page).classList.remove("hidden");
+
+   
+    }
+}
+
+        
+
+        
+function sendSOS() {
+            alert("🚨 SOS Alert Sent! Tracking Ambulance...");
+            initMap();}
+
+
+    function navigateTo(page) {
+        document.querySelectorAll("div[id$='Page']").forEach(div => div.classList.add("hidden"));
+        document.getElementById(page).classList.remove("hidden");
+
+    
+
+
+        function initMap() {
+            // Initialize map only once
+            if (!map) {
+                map = L.map('map').setView([51.505, -0.09], 13);
+                L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+                    attribution: '© OpenStreetMap contributors'
+                }).addTo(map);
+
+                // Initial ambulance marker
+                ambulanceMarker = L.marker([51.505, -0.09], {
+                    icon: L.icon({
+                        iconUrl: 'https://cdn-icons-png.flaticon.com/512/2964/2964514.png', // Ambulance icon
+                        iconSize: [40, 40]
+                    })
+                }).addTo(map)
+                .bindPopup('🚑 Ambulance is on the way')
+                .openPopup();
+
+                trackAmbulance(); // Start real-time tracking
+            }
+        }
+
+        function trackAmbulance() {
+            if ("geolocation" in navigator) {
+                navigator.geolocation.watchPosition(
+                    (position) => {
+                        let lat = position.coords.latitude;
+                        let lon = position.coords.longitude;
+                        console.log("📍 Ambulance Location:", lat, lon);
+
+                        // Move ambulance marker
+                        if (ambulanceMarker) {
+                            ambulanceMarker.setLatLng([lat, lon])
+                                .bindPopup('🚑 Ambulance Moving...')
+                                .openPopup();
+                            map.setView([lat, lon], 13);
+                        }
+                    },
+                    (error) => {
+                        console.error("❌ Geolocation Error:", error);
+                        alert("Real-time tracking failed: " + error.message);
+                    },
+                    { enableHighAccuracy: true, maximumAge: 1000 }
+                );
+            } else {
+                alert("❌ Geolocation is not supported by your browser.");
+            }
+        }}
+        async function sendMessage() {
+    let userInput = document.getElementById("user-input");
+    let message = userInput.value.trim();
+    if (!message) return;
+    
+    displayMessage("You", message);
+    userInput.value = "";
+
+    try {
+        let response = await fetch(`${API_BASE_URL}/chat`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ message }),
+        });
+        
+        if (!response.ok) {
+            throw new Error("Failed to fetch response");
+        }
+
+        let data = await response.json();
+        displayMessage("AI", data.reply || "Sorry, I couldn't understand that.");
+    } catch (error) {
+        console.error("Error communicating with AI:", error);
+        displayMessage("AI", "Error connecting to AI server. Please try again later.");
+    }
+}
+
+function displayMessage(sender, message) {
+    let chatBox = document.getElementById("chat-box");
+    let messageElement = document.createElement("p");
+    messageElement.innerHTML = `<strong>${sender}:</strong> ${message}`;
+    chatBox.appendChild(messageElement);
+    chatBox.scrollTop = chatBox.scrollHeight;
+};
+</script>
+     
+     </script>
+</body>
+</html>
+        
